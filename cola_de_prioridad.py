@@ -45,19 +45,10 @@ class DobleLinkedList:
         else:
             aux = DNode(e)
             aux.next = self.head
-            self.head.prev = None
+            self.head.prev = aux
             self.head = aux
         self.size +=1      
-    
-    def first_position(self):
-        node = self.tail
-        node.prev = None
-        node.next = self.head
-        self.head.next = None
-        self.head.prev = node
-        aux = self.head
-        self.tail = aux
-        self.head = node
+
     
     def other_position(self, node:DNode):
         aux = node.prev
@@ -72,16 +63,12 @@ class DobleLinkedList:
         node.prev = self.tail
         self.tail = aux_2
 
-    def delete_at_index(self, index):
-
-        if index > self.size: return
-        if index == 0:
-            aux = self.head.next
-            self.head.next = None
-            aux.prev = None
-            self.head = aux 
-        self.size -=1
-        return self.head
+    def delete_head(self):
+        aux = self.head.next
+        aux.prev = None
+        self.head.next = None
+        self.head = aux 
+        self.size -= 1
     
     def delete(self, index):
         node = self.head
@@ -115,6 +102,7 @@ class DobleLinkedList:
             print("Next:", node.next.value.nombre if node.next else "None")
             print("----")
             node = node.next
+
     def show_head_and_tail(self):
         if self.head is None:
             print("La lista está vacía.")
@@ -135,6 +123,7 @@ class DobleLinkedList:
         print("Descripción:", self.tail.value.descripcion)
         print("Prioridad:", self.tail.value.prioridad)
         print("----")
+        
     def traverse_from_tail(self):
         node = self.tail
         while (node is not None):
@@ -158,13 +147,13 @@ class cola_de_prioridad:
         self.lista_pacientes = lista_pacientes
 
     def buscar_siguiente_prioridad(self):
-        node = self.lista_pacientes.head
+        paciente = self.lista_pacientes.head
         self.count = 0
 
         for _ in range(self.lista_pacientes.size):
-            if node.value.prioridad == 1:
+            if paciente.value.prioridad == 1:
                 self.count +=1
-                node = node.next
+                paciente = paciente.next
         return True
         
     def agregar_paciente(self, paciente: Paciente):
@@ -173,7 +162,7 @@ class cola_de_prioridad:
         if prioridad_paciente == 1 and self.lista_pacientes.size>0:
 
             if self.prioridad_first != 1:
-                self.lista_pacientes.first_position()
+                self.lista_pacientes.preppend(paciente)
             
             else:
 
@@ -196,7 +185,7 @@ class cola_de_prioridad:
 
     def atender_paciente(self):
         self.lista_pacientes.show_head()
-        self.lista_pacientes.delete_at_index(0)
+        self.lista_pacientes.delete_head()
     
     def mostrar_cola(self):
         self.lista_pacientes.traverse()
@@ -230,13 +219,13 @@ class cola_de_prioridad:
                 paciente.prioridad = nueva_prioridad
                 index = self.buscar_posicion_paciente(nombre)
                 paciente = self.lista_pacientes.delete(index)
-                self.agregar_paciente(paciente)  
+                self.agregar_paciente(paciente) 
 
 # IMPLEMENTACION
 
 ll = DobleLinkedList()
 cola = cola_de_prioridad(ll)
-Paciente_1 = Paciente("uno", 11, "x", 1)
+Paciente_1 = Paciente("uno", 11, "x", 2)
 Paciente_2 = Paciente("dos", 55, "x", 1)
 Paciente_3 = Paciente("seis", 66, "x", 2)
 Paciente_4 = Paciente("tres", 22, "x", 1)
@@ -258,6 +247,19 @@ print("*************")
 cola.actualizar_prioridad("ocho", 1)
 Paciente_9 = Paciente("nueve", 77, "x", 2)
 cola.agregar_paciente(Paciente_9)
+print("*************")
+cola.mostrar_cola()
+print("*************")
+ll.show_head_and_tail()
+print("*************")
+paciente_10 = Paciente("diez", 77, "primero", 1)
+
+ll.preppend(paciente_10)
+cola.mostrar_cola()
+print("*************")
+ll.show_head_and_tail()
+print("*************")
+cola.atender_paciente()
 print("*************")
 cola.mostrar_cola()
 print("*************")
