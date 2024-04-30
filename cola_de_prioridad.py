@@ -71,25 +71,29 @@ class DobleLinkedList:
         self.size -= 1
     
     def delete(self, index):
-        node = self.head
-            
-        for i in range(self.size):
-            if node is not None:
-                if i == index:
-                    anterior = node.prev
-                    anterior.next = None
-                    node.prev = None
-                    if node != self.tail:
-                        siguiente = node.next
-                        node.next = None
-                        siguiente.prev = None
-                        anterior.next = siguiente
-                        siguiente.prev = anterior
-                    self.tail = anterior
+        if index < 0 or index >= self.size:
+            return None
 
-                    return node.value    
-            node = node.next
-        self.size -=1 
+        node = self.head
+        if index == 0:
+            self.head = node.next
+            if self.head is not None:
+                self.head.prev = None
+            else:
+                self.tail = None
+        else:
+            for _ in range(index):
+                node = node.next
+            if node.prev is not None:
+                node.prev.next = node.next
+            if node.next is not None:
+                node.next.prev = node.prev
+            if node == self.tail:
+                self.tail = node.prev
+
+        self.size -= 1
+        return node.value
+ 
 
     def traverse(self):
         node = self.head
@@ -134,61 +138,79 @@ class DobleLinkedList:
             print("----")
             node = node.prev
     
-    def show_head(self):
+    def show_value(self, e):
         node = self.head
-        print("Nombre:", node.value.nombre)
-        print("Edad:", node.value.edad)
-        print("Descripción:", node.value.descripcion)
-        print("Prioridad:", node.value.prioridad)
-        print("----")
+
+        for i in range(self.size):
+            if i == e:
+                print("Nombre:", node.value.nombre)
+                print("Edad:", node.value.edad)
+                print("Descripción:", node.value.descripcion)
+                print("Prioridad:", node.value.prioridad)
+                print("----")
+            node = node.next
+
+    
     
 class cola_de_prioridad:
     def __init__(self, lista_pacientes: DobleLinkedList):
         self.lista_pacientes = lista_pacientes
-
-    def buscar_siguiente_prioridad(self):
-        paciente = self.lista_pacientes.head
-        self.count = 0
-
-        for _ in range(self.lista_pacientes.size):
-            if paciente.value.prioridad == 1:
-                self.count +=1
-                paciente = paciente.next
-        return True
-        
+        self.prioridad_1 = 0
+        self.prioridad_2 = 0
+        self.prioridad_3 = 0
+ 
     def agregar_paciente(self, paciente: Paciente):
         prioridad_paciente = paciente.prioridad
-
-        if prioridad_paciente == 1 and self.lista_pacientes.size>0:
-
+        
+        if prioridad_paciente == 1 and self.lista_pacientes.size > 0:
+            self.prioridad_1 += 1
             if self.prioridad_first != 1:
                 self.lista_pacientes.preppend(paciente)
-            
             else:
+                self.lista_pacientes.append(paciente)
+                node = self.lista_pacientes.head
 
-                if self.buscar_siguiente_prioridad():
+                for _ in range(self.prioridad_1):
+                    if node is not None and node.value.prioridad == 1:
+                        node = node.next
+
+                if node is not None and node.value.prioridad != 1:
+                    self.lista_pacientes.other_position(node)
+
+        elif prioridad_paciente == 2 and self.lista_pacientes.size > 0:
+            self.prioridad_2 += 1
+            
+            if self.lista_pacientes.size == 1:
+                if self.lista_pacientes.head.value.prioridad != 1:
+                    self.lista_pacientes.preppend(paciente)
+                else:
                     self.lista_pacientes.append(paciente)
-                    node = self.lista_pacientes.head
+            else:
+                self.lista_pacientes.append(paciente)
+                node = self.lista_pacientes.head
+                prioridad = self.prioridad_1 + self.prioridad_2
+                for _ in range(prioridad):
+                    if node is not None and (node.value.prioridad == 1 or node.value.prioridad == 2):
+                        node = node.next
 
-                    for _ in range(self.count):
-
-                        if node.value.prioridad == 1:
-                            node = node.next
-
-                    if node.value.prioridad != 1:
-
-                        self.lista_pacientes.other_position(node)            
+                if node is not None and node.value.prioridad != 1:
+                    self.lista_pacientes.other_position(node) 
         else:
+            if paciente.prioridad == 1:
+                self.prioridad_1 += 1
+            elif paciente.prioridad == 2:
+                self.prioridad_2 += 1
+            else:
+                self.prioridad_3 += 1
             self.lista_pacientes.append(paciente)
+        
         self.first = self.lista_pacientes.head
         self.prioridad_first = self.first.value.prioridad
 
+
     def atender_paciente(self):
-        self.lista_pacientes.show_head()
+        self.lista_pacientes.show_value(0)
         self.lista_pacientes.delete_head()
-    
-    def mostrar_cola(self):
-        self.lista_pacientes.traverse()
 
     def buscar_paciente(self, nombre):
         paciente: Paciente
@@ -199,11 +221,20 @@ class cola_de_prioridad:
                 return paciente
             paciente = paciente.next
 
-    def buscar_posicion_paciente(self, nombre):
+    def buscar_posicion_paciente_nombre(self, nombre):
         paciente = self.lista_pacientes.head 
 
         for i in range(self.lista_pacientes.size):
             if paciente.value.nombre == nombre:
+                return i
+            paciente = paciente.next
+        return False
+    
+    def buscar_posicion_paciente_prioridad(self, prioridad):
+        paciente = self.lista_pacientes.head 
+
+        for i in range(self.lista_pacientes.size):
+            if paciente.value.prioridad == prioridad:
                 return i
             paciente = paciente.next
         return False
@@ -215,24 +246,109 @@ class cola_de_prioridad:
             paciente = paciente_nodo.value 
             if nueva_prioridad != 1:
                 paciente.prioridad = nueva_prioridad
+
+                if paciente.prioridad == 2 and nueva_prioridad == 3:
+                    self.prioridad_2 -= 1
+                    self.prioridad_3 += 1
+                else:
+                    self.prioridad_3 -= 1
+                    self.prioridad_2 += 1
             else:
+
+                if paciente.prioridad == 2:
+                    self.prioridad_2 -= 1
+                else:
+                    self.prioridad_3 -= 1
                 paciente.prioridad = nueva_prioridad
-                index = self.buscar_posicion_paciente(nombre)
+                index = self.buscar_posicion_paciente_nombre(nombre)
                 paciente = self.lista_pacientes.delete(index)
-                self.agregar_paciente(paciente) 
+                self.agregar_paciente(paciente)
+
+    
+    def atender_grupo(self):
+        if self.prioridad_1 > self.prioridad_2 and self.prioridad_1 > self.prioridad_3:
+            node = self.lista_pacientes.head
+            for _ in range(self.prioridad_1):
+                    self.lista_pacientes.show_value(0)
+                    self.lista_pacientes.delete_head()
+                    self.prioridad_1 -= 1
+            node = node.next
+        
+        elif self.prioridad_2 > self.prioridad_1 and self.prioridad_2 > self.prioridad_3:
+            node = self.lista_pacientes.head
+            
+            for _ in range(self.lista_pacientes.size):
+            
+                if node.value.prioridad == 2:
+                    index = self.buscar_posicion_paciente_prioridad(2)
+                    self.lista_pacientes.show_value(index)
+                    self.lista_pacientes.delete(index)
+                    self.prioridad_2 -= 1
+                node = node.next
+        
+        elif self.prioridad_3 > self.prioridad_1 and self.prioridad_3 > self.prioridad_2:
+            node = self.lista_pacientes.head
+            
+            for _ in range(self.lista_pacientes.size):
+            
+                if node.value.prioridad == 3:
+                    index = self.buscar_posicion_paciente_prioridad(3)
+                    self.lista_pacientes.show_value(index)
+                    self.lista_pacientes.delete(index)
+                    self.prioridad_3 -= 1
+                node = node.next
+        
+        elif self.prioridad_1 == self.prioridad_2 and self.prioridad_1 > self.prioridad_3:
+            node = self.lista_pacientes.head
+            for _ in range(self.prioridad_1):
+                    self.lista_pacientes.show_value(0)
+                    self.lista_pacientes.delete_head()
+                    self.prioridad_1 -= 1
+            node = node.next
+        
+    
+        elif self.prioridad_2 == self.prioridad_3 and self.prioridad_2 > self.prioridad_1:
+            node = self.lista_pacientes.head
+            for _ in range(self.lista_pacientes.size):
+            
+                if node.value.prioridad == 2:
+                    index = self.buscar_posicion_paciente_prioridad(2)
+                    self.lista_pacientes.show_value(index)
+                    self.lista_pacientes.delete(index)
+                    self.prioridad_2 -= 1
+                node = node.next
+        
+        elif self.prioridad_3 == self.prioridad_1 and self.prioridad_3 > self.prioridad_2:
+            node = self.lista_pacientes.head
+            for _ in range(self.prioridad_1):
+                    self.lista_pacientes.show_value(0)
+                    self.lista_pacientes.delete_head()
+                    self.prioridad_1 -= 1
+            node = node.next
+
+    def mostrar_cola(self):
+        self.lista_pacientes.traverse()
+
+    def mostrar_contadores(self):
+        print(self.prioridad_1)
+        print(self.prioridad_2)
+        print(self.prioridad_3)
+    
+
+
 
 # IMPLEMENTACION
 
 ll = DobleLinkedList()
 cola = cola_de_prioridad(ll)
-Paciente_1 = Paciente("uno", 11, "x", 2)
-Paciente_2 = Paciente("dos", 55, "x", 1)
-Paciente_3 = Paciente("seis", 66, "x", 2)
-Paciente_4 = Paciente("tres", 22, "x", 1)
-Paciente_5 = Paciente("cuatro", 33, "x", 1)
-Paciente_6 = Paciente("cinco", 44, "x", 1)
-Paciente_7 = Paciente("siete", 77, "x", 2)
-Paciente_8 = Paciente("ocho", 77, "x", 2)
+Paciente_1 = Paciente("tres", 66, "x", 2)
+Paciente_2 = Paciente("uno", 11, "x", 1)
+Paciente_3 = Paciente("cuatro", 44, "x", 2)
+Paciente_4 = Paciente("dos", 22, "x", 1)
+Paciente_5 = Paciente("cinco", 33, "x", 2)
+Paciente_6 = Paciente("seis", 55, "x", 3)
+Paciente_7 = Paciente("siete", 88, "x", 3)
+Paciente_8 = Paciente("ocho", 99, "x", 3)
 
 cola.agregar_paciente(Paciente_1)
 cola.agregar_paciente(Paciente_2)
@@ -242,24 +358,15 @@ cola.agregar_paciente(Paciente_5)
 cola.agregar_paciente(Paciente_6)
 cola.agregar_paciente(Paciente_7)
 cola.agregar_paciente(Paciente_8)
-cola.mostrar_cola()
-print("*************")
-cola.actualizar_prioridad("ocho", 1)
-Paciente_9 = Paciente("nueve", 77, "x", 2)
-cola.agregar_paciente(Paciente_9)
-print("*************")
-cola.mostrar_cola()
-print("*************")
-ll.show_head_and_tail()
-print("*************")
-paciente_10 = Paciente("diez", 77, "primero", 1)
 
-ll.preppend(paciente_10)
+
 cola.mostrar_cola()
+print("*************")
+cola.mostrar_contadores()
 print("*************")
 ll.show_head_and_tail()
 print("*************")
-cola.atender_paciente()
+cola.atender_grupo()
 print("*************")
 cola.mostrar_cola()
 print("*************")
